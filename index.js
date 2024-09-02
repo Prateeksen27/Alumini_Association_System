@@ -216,13 +216,22 @@ app.get('/StudentDashboard',async (req,res)=>{
   const jobs =  await db.query('select count(*) from job_post')
   const eve_count = event.rows[0].count;
   const job_count = jobs.rows[0].count;
-  res.render('student/index',{eve_count:eve_count,job_count:job_count,name:"Suprateek Sen"})
+  res.render('student/index',{eve_count:eve_count,job_count:job_count,name:req.user.name})
   }else{
     res.redirect('/')
   }
 })
 app.get('/student_login',(req,res)=>{
   res.render('login/student_login')
+})
+app.get('/studentRegister',(req,res)=>{
+  res.render('login/studentRegister')
+})
+app.post('/studentRegister',upload.single('pic'),async (req,res)=>{
+  const {fullname,collegeid,gender,batch,password}=req.body;
+  const pic = req.file.filename;
+  await db.query('insert into student(name,roll_no,password,profile_pic,gender,batch) values($1,$2,$3,$4,$5,$6)',[fullname,collegeid,password,pic,gender,batch])
+  res.redirect('/student_login')
 })
 app.get('/EventStudent',async (req,res)=>{
   if(req.isAuthenticated()){
