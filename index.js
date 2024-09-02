@@ -1,0 +1,499 @@
+import express from "express";
+import bodyParser from "body-parser";
+import pg from "pg";
+import passport from "passport";
+import { Strategy } from "passport-local";
+import session from "express-session";
+import path from "path";
+import { fileURLToPath } from "url";
+import multer from 'multer'
+import moment from "moment";
+const app = express();
+
+app.use(
+  session({
+    secret: "TOPSECRETWORD",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 365 * 100,
+    },
+  })
+);
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "public/img");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + extension);
+  },
+});
+const resume = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/resumes'); // Directory to save uploaded files
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const res = multer({ storage: resume });
+// Set the view engine to ejs
+app.set("view engine", "ejs");
+const upload = multer({ storage });
+// Set the views directory
+const port = 3000;
+const saltRounds = 10;
+const db = new pg.Client({
+  user: "postgres",
+  host: "localhost",
+  database: "Alimini_Association_System",
+  password: "root",
+  port: 5432,
+});
+db.connect().then(() => {
+  console.log("Database connected");
+});
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.use(passport.initialize());
+app.use(passport.session());
+app.get("/", (req, res) => {
+  res.render("landing/home");
+});
+app.get("/admin_login", (req, res) => {
+  res.render("login/admin_login");
+});
+app.get('/Events',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query('select * from event')
+    const event = result.rows;
+    
+    res.render('event/showEvent',{name:req.user.name,event:event})
+  }
+})
+app.get('/EventsAlumni',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query('select * from event')
+    const event = result.rows;
+    
+    res.render('common_pages/showEvent',{name:req.user.name,event:event})
+  }
+})
+app.get('/adminDashboard',async (req,res)=>{
+ if(req.isAuthenticated()){
+  const event_count = await db.query("select count(*) from event");
+  const  eve_count = event_count.rows[0].count;
+  res.render('admin/index',{name:req.user.name,eve_count:eve_count})
+ }else{
+  res.redirect('/')
+ }
+})
+app.get('/register',(req,res)=>{
+  res.render('login/register')
+})
+app.get('/addSuccessStory',(req,res)=>{
+  if(req.isAuthenticated()){
+    res.render("successStory/addStory",{name:req.user.name})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/addEvent',(req,res)=>{
+  if(req.isAuthenticated()){
+    res.render('event/addEvent',{event:{},name:req.user.name})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/addEventAlumni',(req,res)=>{
+  if(req.isAuthenticated()){
+    res.render('common_pages/addEvent',{event:{},name:req.user.name})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/alumniDashboard',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const event_count = await db.query("select count(*) from event");
+  const  eve_count = event_count.rows[0].count;
+    res.render('alumini/index',{name:req.user.name,eve_count:eve_count,})
+  }else{
+    res.redirect('/')
+  }
+})
+//Jobs get
+app.get('/addJob',(req,res)=>{
+  if(req.isAuthenticated()){
+    res.render('jobs/addJob',{name:req.user.name});
+  }else{
+    res.redirect('/')
+  }
+})
+//show job
+app.get('/showMyJobs',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query('select * from job_post where email=$1',[req.user.email])
+    res.render('jobs/showJobs',{name:req.user.name,job:result.rows})
+  }
+})
+app.get('/showSuccessStory',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query("select * from success_story")
+    const Fstory = result.rows.map(story => {
+            story.timeAgo = moment(story.created_at).fromNow(); // Assuming 'created_at' is the timestamp
+            return story;
+        });
+    res.render("successStory/showStoryAlumni",{name:req.user.name,story:Fstory})
+  }
+})
+app.get('/responces/:id', async (req,res)=>{
+  if(req.isAuthenticated()){
+    const id = req.params.id.substring(1);  
+    console.log(id);
+    const result = await db.query("select * from job_applications where job_id = $1 and hostemail=$2",[id,req.user.email])
+    res.render('jobs/responces',{name:req.user.name,job:result.rows})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/showSuccessStoryAdmin',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query("select * from success_story")
+    const Fstory = result.rows.map(story => {
+            story.timeAgo = moment(story.created_at).fromNow(); // Assuming 'created_at' is the timestamp
+            return story;
+        });
+    res.render("successStory/showStory",{name:req.user.name,story:Fstory})
+  }
+})
+//student routes
+app.get('/StudentDashboard',async (req,res)=>{
+  if(req.isAuthenticated){
+  const event = await db.query('select count(*) from event');
+  const jobs =  await db.query('select count(*) from job_post')
+  const eve_count = event.rows[0].count;
+  const job_count = jobs.rows[0].count;
+  res.render('student/index',{eve_count:eve_count,job_count:job_count,name:"Suprateek Sen"})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/student_login',(req,res)=>{
+  res.render('login/student_login')
+})
+app.get('/EventStudent',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query('select * from event')
+    res.render('event/eventStudent',{name:req.user.name,event:result.rows})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/showSuccessStoryStudent',async (req,res)=>{
+  if(req.isAuthenticated()){
+     const result = await db.query("select * from success_story")
+    const Fstory = result.rows.map(story => {
+            story.timeAgo = moment(story.created_at).fromNow(); // Assuming 'created_at' is the timestamp
+            return story;
+        });
+    res.render("successStory/showSuccessStoryStudent",{name:req.user.name,story:Fstory})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/showJobs',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query('select * from job_post')
+    res.render('jobs/jobsStudent',{name:req.user.name,job:result.rows})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/apply/:id',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const id = req.params.id.substring(1);
+    const jobs = await db.query('select * from job_post where id = $1',[id])
+    res.render('jobs/applyjob',{name:req.user.name,user:req.user,job:jobs.rows[0]}) 
+  }else{
+    res.redirect('/')
+  }
+})
+//acept/reject routes
+app.get('/acept/:id/:app_Id', async (req, res) => {
+  if (req.isAuthenticated()) {
+    const id = req.params.id; 
+    const app_id = req.params.app_Id;
+
+    try {
+      console.log(id, app_id);
+
+      await db.query("UPDATE job_applications SET status = $1 WHERE application_id = $2", ["Accepted", id]);
+      res.redirect(`/responces/:${app_id}`)
+      
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  } else {
+    res.redirect('/');
+  }
+});
+app.get('/reject/:id/:app_Id', async (req, res) => {
+  if (req.isAuthenticated()) {
+    const id = req.params.id; 
+    const app_id = req.params.app_Id;
+
+    try {
+      console.log(id, app_id);
+
+      await db.query("UPDATE job_applications SET status = $1 WHERE application_id = $2", ["Rejected", id]);
+      res.redirect(`/responces/:${app_id}`)
+      
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  } else {
+    res.redirect('/');
+  }
+});
+
+
+
+
+//student post routes
+app.post('/apply', res.single('resume'), async (req, res) => {
+  if(req.isAuthenticated()){
+    try {
+        const jobId = req.query.id;
+        const hostEmail = req.query.email;
+        // Access other form fields from req.body
+        const linkedInProfile = req.body.linkedin;
+        const gitHubProfile = req.body.github;
+        const availability = req.body.availability;
+        const answer = req.body.answer;
+        const email = req.body.email;
+        const resumeFile = req.file.filename;
+        const insertApplicationQuery = `
+            INSERT INTO job_applications (job_id, hostEmail, linkedin_profile, github_profile, availability, answer, resume,applicant_name,applicant_email)
+            VALUES ($1, $2, $3, $4, $5, $6, $7,$8,$9)
+        `;
+        const values = [jobId, hostEmail, linkedInProfile, gitHubProfile, availability, answer, resumeFile,req.user.name,email];
+
+        await db.query(insertApplicationQuery, values);
+
+       res.redirect('/showJobs')
+    } catch (error) {
+        console.error('Error processing application:', error);
+        res.status(500).send('An error occurred while processing your application.');
+    }
+  }else{
+    res.redirect('/')
+  }
+});
+app.get('/alumni_login',(req,res)=>{
+  res.render('login/alumini_login')
+})
+app.get("/logout", (req, res) => {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.redirect("/");
+  });
+});
+//post routes
+app.post(
+  "/createEvent",
+  upload.single("eventImage"),
+  async (req, res) => {
+    try {
+      const { title, location, host, Date, time, description } = req.body;
+      const eventImage = req.file.filename;
+
+
+      const result = await db.query(
+        "INSERT INTO event (title, venue, host_name, event_time, event_description, event_pic,event_date) VALUES ($1, $2, $3, $4, $5, $6,$7)",
+        [title, location, host, time, description, eventImage,Date]
+      );
+      res.redirect("/Events");
+    } catch (err) {
+      console.error("Error creating event:", err);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+
+);
+app.post(
+  "/createEventAlumni",
+  upload.single("eventImage"),
+  async (req, res) => {
+    try {
+      const { title, location, host, Date, time, description } = req.body;
+      const eventImage = req.file.filename;
+
+
+      const result = await db.query(
+        "INSERT INTO event (title, venue, host_name, event_time, event_description, event_pic,event_date) VALUES ($1, $2, $3, $4, $5, $6,$7)",
+        [title, location, host, time, description, eventImage,Date]
+      );
+      res.redirect("/EventsAlumni");
+    } catch (err) {
+      console.error("Error creating event:", err);
+      res.status(500).send("Internal Server Error");
+    }
+  }
+
+);
+app.post('/addSuccessStory', upload.single("storyImage"), async (req, res) => {
+  if (req.isAuthenticated()) {
+    try {
+      const { title, description } = req.body;
+      const storyImage = req.file ? req.file.filename : null; // Handle cases where no file is uploaded
+
+      // Ensure all parameters are included in the query
+      const result = await db.query(
+        `INSERT INTO success_story (name, passout, story, success_story_image, email, title,profile_pic) VALUES ($1, $2, $3, $4, $5, $6,$7)`,
+        [req.user.name, req.user.passout, description, storyImage, req.user.email, title,req.user.profile_pic]
+      );
+
+      res.redirect('/showSuccessStory');
+    } catch (err) {
+      console.error('Error adding success story:', err); // Log the error
+      res.status(500).send('Internal Server Error'); // Send an error response
+    }
+  } else {
+    res.redirect('/login'); // Redirect to login if not authenticated
+  }
+});
+app.post('/addJob',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const {jobTitle,companyName,location,Vacancy,jobDescription,jobType} = req.body;
+    const result = await db.query('insert into job_post(title,company_name,location,vacancy,description,job_type,email) values($1,$2,$3,$4,$5,$6,$7)',
+      [jobTitle,companyName,location,Vacancy,jobDescription,jobType,req.user.email]
+    )
+    res.redirect('/showMyJobs')
+  }else{
+    res.redirect('/')
+  }
+})
+app.post('/register', upload.single('pic'), async (req, res) => {
+  try {
+    const { fullname, collegeid, gender, batch, companyname, email, password,about } = req.body;
+    const pic = req.file ? req.file.filename : null;
+    const result = await db.query('select * from alumni where email = $1',[email])
+    if(result.rows.length == 0){
+      const result = await db.query("insert into alumni(email,name,password,profile_pic,passout,current_job,about,gender) values($1,$2,$3,$4,$5,$6,$7,$8)",
+        [email,fullname,password,pic,batch,companyname,about,gender]
+      )
+    }else{
+      res.redirect('/alumni_login')
+    }
+
+    res.redirect('/register');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post(
+  "/login",
+  passport.authenticate("admin", {
+    successRedirect: "/adminDashboard",
+    failureRedirect: "/admin_login",
+  })
+);
+app.post(
+  "/alu_login",
+  passport.authenticate("alumni", {
+    successRedirect: "/alumniDashboard",
+    failureRedirect: "/alumni_login",
+  })
+);
+app.post(
+  "/student_login",
+  passport.authenticate("student", {
+    successRedirect: "/StudentDashboard",
+    failureRedirect: "/student_login",
+  })
+);
+passport.use(
+  "admin",
+  new Strategy(async function verify(username, password, cb) {
+    try {
+      const result = await db.query(
+        "SELECT * FROM admin WHERE collegeid = $1 ",
+        [username]
+      );
+      console.log("Safi");
+      
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        const storedHashedPassword = user.password;
+        if (storedHashedPassword == password) return cb(null, user);
+        else return cb(null, false);
+      } else {
+        return cb("User not found");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  })
+);
+passport.use(
+  "alumni",
+  new Strategy(async function verify(username, password, cb) {
+    try {
+      const result = await db.query(
+        "SELECT * FROM alumni WHERE email = $1 ",
+        [username]
+      );
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        const storedHashedPassword = user.password;
+        if (storedHashedPassword == password) return cb(null, user);
+        else return cb(null, false);
+      } else {
+        return cb("User not found");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  })
+);
+passport.use(
+  "student",
+  new Strategy(async function verify(username, password, cb) {
+    try {
+      const result = await db.query(
+        "SELECT * FROM student WHERE roll_no = $1 ",
+        [username]
+      );
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        const storedHashedPassword = user.password;
+        if (storedHashedPassword == password) return cb(null, user);
+        else return cb(null, false);
+      } else {
+        return cb("User not found");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  })
+);
+passport.serializeUser((user, cb) => {
+  cb(null, user);
+});
+
+passport.deserializeUser((user, cb) => {
+  cb(null, user);
+});
+app.listen(port, () => {
+  console.log("Server is running on port ", port);
+});

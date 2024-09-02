@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Card</title>
+    <style>
+      body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f5f5f5;
+}
+
+.card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    margin: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.profile-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.profile-pic {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.name {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.title-row {
+    margin-bottom: 10px;
+}
+
+.story-title {
+    font-size: 18px;
+    margin: 0;
+}
+
+.image-row {
+    margin-bottom: 10px;
+}
+
+.story-image {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.description-row {
+    font-size: 14px;
+    color: #333;
+}
+
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="profile-row">
+            <img src="/public/images/profile_pic.jpeg" alt="Profile Picture" class="profile-pic">
+            <span class="name">John Doe</span>
+        </div>
+        <div class="title-row">
+            <h2 class="story-title">Story Title</h2>
+        </div>
+        <div class="image-row">
+            <img src="/public/images/admin.jpg" alt="Story Image" class="story-image">
+        </div>
+        <div class="description-row">
+            <p class="story-description">This is the story description. It can be a few sentences long to provide details about the story.</p>
+        </div>
+    </div>
+</body>
+</html>

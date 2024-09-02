@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Job Applications</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+            color: #333;
+        }
+        
+        table th, table td {
+            padding: 1rem;
+            border: 1px solid #ddd;
+        }
+        
+        table th {
+            background-color: #007bff;
+            color: #ffffff;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #f1f1f1;
+        }
+        
+        table tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-view {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .btn-view:hover {
+            background-color: #0056b3;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-view:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Student Job Applications</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Company</th>
+                    <th>Applicant Name</th>
+                    <th>Applicant Email</th>
+                    <th>Resume Link</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="applicationsTable">
+                <!-- Job applications will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Example data - replace this with actual data fetching logic
+        const applications = [
+        {
+            "jobTitle": "Data Scientist",
+            "companyName": "Data Inc.",
+            "studentName": "Alice Johnson",
+            "studentEmail": "alice.johnson@example.com",
+            "resumeLink": "https://resume.com/alicejohnson"
+        },
+        {
+            "jobTitle": "UX Designer",
+            "companyName": "Design Studio",
+            "studentName": "Bob Smith",
+            "studentEmail": "bob.smith@example.com",
+            "resumeLink": "https://resume.com/bobsmith"
+        },
+        {
+            "jobTitle": "Full Stack Developer",
+            "companyName": "Web Solutions",
+            "studentName": "Charlie Brown",
+            "studentEmail": "charlie.brown@example.com",
+            "resumeLink": "https://resume.com/charliebrown"
+        },
+        {
+            "jobTitle": "Marketing Specialist",
+            "companyName": "MarketNow",
+            "studentName": "Daisy Williams",
+            "studentEmail": "daisy.williams@example.com",
+            "resumeLink": "https://resume.com/daisywilliams"
+        },
+        {
+            "jobTitle": "Project Manager",
+            "companyName": "ManageIt",
+            "studentName": "Edward Lee",
+            "studentEmail": "edward.lee@example.com",
+            "resumeLink": "https://resume.com/edwardlee"
+        },
+        {
+            "jobTitle": "Software Engineer",
+            "companyName": "Innovate Tech",
+            "studentName": "Fiona Green",
+            "studentEmail": "fiona.green@example.com",
+            "resumeLink": "https://resume.com/fionagreen"
+        },
+        {
+            "jobTitle": "Content Writer",
+            "companyName": "WriteIt",
+            "studentName": "George Harris",
+            "studentEmail": "george.harris@example.com",
+            "resumeLink": "https://resume.com/georgeharris"
+        },
+        {
+            "jobTitle": "System Analyst",
+            "companyName": "TechSystems",
+            "studentName": "Hannah Clark",
+            "studentEmail": "hannah.clark@example.com",
+            "resumeLink": "https://resume.com/hannahclark"
+        },
+        {
+            "jobTitle": "Web Developer",
+            "companyName": "Webify",
+            "studentName": "Isaac King",
+            "studentEmail": "isaac.king@example.com",
+            "resumeLink": "https://resume.com/isaacking"
+        },
+        {
+            "jobTitle": "Graphic Designer",
+            "companyName": "Creative Minds",
+            "studentName": "Jasmine Adams",
+            "studentEmail": "jasmine.adams@example.com",
+            "resumeLink": "https://resume.com/jasmineadams"
+        }
+    ]
+    
+
+        function loadApplications() {
+            const tableBody = document.getElementById('applicationsTable');
+            tableBody.innerHTML = '';
+
+            applications.forEach(app => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${app.jobTitle}</td>
+                    <td>${app.companyName}</td>
+                    <td>${app.studentName}</td>
+                    <td>${app.studentEmail}</td>
+                    <td><a href="${app.resumeLink}" target="_blank" class="btn-view">View Resume</a></td>
+                    <td><button class="btn-view">Contact</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Load applications on page load
+        window.onload = loadApplications;
+    </script>
+</body>
+</html>
