@@ -44,6 +44,7 @@
             color: #333;
             margin-top: 1rem;
         }
+
         table th,
         table td {
             padding: 1rem;
@@ -95,60 +96,77 @@
 
 <body class="sb-nav-fixed">
     <%- include('../partials/Studentheader.ejs') %>
-    <div id="layoutSidenav_content">
-        <main>
-            <div class="container-fluid px-4">
-                <div class="container">
-                    <h2>Posted Jobs</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Job Title</th>
-                                <th>Company</th>
-                                <th>Location</th>
-                                <th>Job Type</th>
-                                <th>Vacancy</th>
-                                <th>Apply</th>
-                            </tr>
-                        </thead>
-                        <tbody id="applicationsTable">
-                            <% job.forEach(element => { %>
-                            <tr>
-                                <td><%= element.title %></td>
-                                <td><%= element.company_name %></td>
-                                <td><%= element.location %></td>
-                                <td><%= element.job_type %></td>
-                                <td><%= element.vacancy %></td>
-                                <td><button class="btn-response"><a style="text-decoration: none;color: white;" href="apply/:<%= element.id %>">Apply</a></button></td>
-                            </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-        <footer class="py-4 bg-light mt-auto">
-            <div class="container-fluid px-4">
-                <div class="d-flex align-items-center justify-content-between small">
-                    <div class="text-muted">Copyright &copy; Your Website 2023</div>
-                    <div>
-                        <a href="#">Privacy Policy</a>
-                        &middot;
-                        <a href="#">Terms &amp; Conditions</a>
+        <div id="layoutSidenav_content">
+            <main>
+                <div class="container-fluid px-4">
+                    <div class="container">
+                        <h2>Posted Jobs</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Job Title</th>
+                                    <th>Company</th>
+                                    <th>Location</th>
+                                    <th>Job Type</th>
+                                    <th>Vacancy</th>
+                                    <th>Apply</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicationsTable">
+                                <% job.forEach(element=> { %>
+                                    <% if (element.current_status=='Accepted' ) { %>
+                                        <tr>
+                                            <td>
+                                                <%= element.title %>
+                                            </td>
+                                            <td>
+                                                <%= element.company_name %>
+                                            </td>
+                                            <td>
+                                                <%= element.location %>
+                                            </td>
+                                            <td>
+                                                <%= element.job_type %>
+                                            </td>
+                                            <td>
+                                                <%= element.vacancy %>
+                                            </td>
+                                            <td><button class="btn-response"><a
+                                                        style="text-decoration: none;color: white;"
+                                                        href="apply/:<%= element.id %>">Apply</a></button></td>
+                                        </tr>
+                                        <% } %>
+
+                                            <% }) %>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-        </footer>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
-    </script>
-    <script src="/js/scripts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
-    <script src="assets/demo/chart-area-demo.js"></script>
-    <script src="assets/demo/chart-bar-demo.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
-        crossorigin="anonymous"></script>
-    <script src="/js/datatables-simple-demo.js"></script>
+            </main>
+            <footer class="py-4 bg-light mt-auto">
+                <div class="container-fluid px-4">
+                    <div class="d-flex align-items-center justify-content-between small">
+                        <div class="text-muted">Copyright &copy; Your Website 2023</div>
+                        <div>
+                            <a href="#">Privacy Policy</a>
+                            &middot;
+                            <a href="#">Terms &amp; Conditions</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+            crossorigin="anonymous">
+            </script>
+        <script src="/js/scripts.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
+            crossorigin="anonymous"></script>
+        <script src="assets/demo/chart-area-demo.js"></script>
+        <script src="assets/demo/chart-bar-demo.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
+            crossorigin="anonymous"></script>
+        <script src="/js/datatables-simple-demo.js"></script>
 </body>
 
 </html>

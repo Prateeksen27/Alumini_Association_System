@@ -95,54 +95,52 @@
 </head>
 
 <body class="sb-nav-fixed">
-    <%- include('../partials/Alumniheader.ejs') %>
+    <%- include('../partials/adminheader.ejs') %>
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
                     <div class="container">
-                        <h2>Student Job Applications</h2>
+                        <h2>Alumni Verification</h2>
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Job Title</th>
-                                    <th>Company</th>
-                                    <th>Location</th>
-                                    <th>Job Type</th>
-                                    <th>Vacancy</th>
-                                    <th>Response</th>
+                                    <th>Alumni Name</th>
+                                    <th>Passout Batch</th>
+                                    <th>College Id</th>
+                                    <th>Approve/Reject</th>
                                 </tr>
                             </thead>
                             <tbody id="applicationsTable">
-                                <% job.forEach(element=> { %>
-                                    <tr>
-                                        <td>
-                                            <%= element.title %>
-                                        </td>
-                                        <td>
-                                            <%= element.company_name %>
-                                        </td>
-                                        <td>
-                                            <%= element.location %>
-                                        </td>
-                                        <td>
-                                            <%= element.job_type %>
-                                        </td>
-                                        <td>
-                                            <%= element.vacancy %>
-                                        </td>
-                                        <% if (element.current_status=='Accepted' ) { %>
-                                            <td><button class="btn-response"><a
-                                                        style="text-decoration: none; color: white;"
-                                                        href="/responces/:<%= element.id %>">View
-                                                        Responces</a></button></td>
-                                            <% } else { %>
-                                                <td>
-                                                    <%= element.current_status %>
-                                                </td>
-                                                <% } %>
+                                <% alumni.forEach(element=> { %>
+                                    <% if (element.status=='Not evaluated' ) { %>
+                                        <tr>
+                                            <td>
+                                                <%= element.name %>
+                                            </td>
+                                            <td>
+                                                <%= element.passout %>
+                                            </td>
+                                            <td>
+                                                N/A
+                                            </td>
 
-                                    </tr>
-                                    <% }) %>
+
+                                            <td>
+                                                <div>
+                                                    <button class="btn btn-success"><a
+                                                            style="text-decoration: none; color: white;"
+                                                            href="/approveAlumni/:<%= element.email %>">Approve</a></button>
+                                                    <button class="btn btn-danger"><a
+                                                            style="text-decoration: none; color: white;"
+                                                            href="/rejectAlumni/:<%= element.email %>">Reject</a></button>
+                                                </div>
+                                            </td>
+
+
+                                        </tr>
+                                        <% } %>
+
+                                            <% }) %>
                             </tbody>
                         </table>
                     </div>

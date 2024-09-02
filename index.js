@@ -8,6 +8,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import multer from 'multer'
 import moment from "moment";
+import { name } from "ejs";
 const app = express();
 
 app.use(
@@ -87,13 +88,42 @@ app.get('/adminDashboard',async (req,res)=>{
  if(req.isAuthenticated()){
   const event_count = await db.query("select count(*) from event");
   const  eve_count = event_count.rows[0].count;
-  res.render('admin/index',{name:req.user.name,eve_count:eve_count})
+  const job_count = await db.query("select count(*) from job_post where current_status='Not evaluated by admin'")
+  const acepted_job_count = await db.query("select count(*) from job_post where current_status = $1",["Accepted"])
+  const rejected_job_count = await db.query("select count(*) from job_post where current_status = $1",["Rejected"])
+  res.render('admin/index',{name:req.user.name,eve_count:eve_count,job_count:job_count.rows[0].count,approved_job_count:acepted_job_count.rows[0].count,rejected_job_count:rejected_job_count.rows[0].count})
  }else{
   res.redirect('/')
  }
 })
 app.get('/register',(req,res)=>{
   res.render('login/register')
+})
+app.get('/showAllAlumni',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query("Select * from alumni where status=$1",["Not evaluated"])
+    res.render('verifyAlumni/showAllAlumni',{alumni:result.rows,name:req.user.name})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/approveAlumni/:email',async (req,res)=>{
+  if(req.isAuthenticated()){
+   await db.query('update alumni set status = $1 where email=$2',["Approved",req.params.email.substring(1)])
+    res.redirect('/showAllAlumni')
+    
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/rejectAlumni/:email',async (req,res)=>{
+  if(req.isAuthenticated()){
+   await db.query('update alumni set status = $1 where email=$2',["Rejected",req.params.email.substring(1)])
+    res.redirect('/showAllAlumni')
+    
+  }else{
+    res.redirect('/')
+  }
 })
 app.get('/addSuccessStory',(req,res)=>{
   if(req.isAuthenticated()){
@@ -168,6 +198,15 @@ app.get('/showSuccessStoryAdmin',async (req,res)=>{
             return story;
         });
     res.render("successStory/showStory",{name:req.user.name,story:Fstory})
+  }
+})
+//verify jobs
+app.get('/verifyJobs',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query("select * from job_post where current_status = 'Not evaluated by admin'");
+    res.render('jobs/verifyJobs',{name:req.user.name,job:result.rows})
+  }else{
+    res.redirect('/')
   }
 })
 //student routes
@@ -263,8 +302,57 @@ app.get('/reject/:id/:app_Id', async (req, res) => {
 });
 
 
-
-
+//Accept reject Job by admin
+app.get('/acceptJob/:id/', async (req, res) => {
+  if (req.isAuthenticated()) {
+    const id = req.params.id; 
+  
+   
+    try {
+      await db.query("UPDATE job_post SET current_status = $1 WHERE id = $2", ["Accepted", id]);
+      res.redirect(`/verifyJobs`)
+      
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  } else {
+    res.redirect('/');
+  }
+});
+app.get('/rejectJob/:id/', async (req, res) => {
+  if (req.isAuthenticated()) {
+    const id = req.params.id; 
+   
+    try {
+      await db.query("UPDATE job_post SET current_status = $1 WHERE id = $2", ["Rejected", id]);
+      res.redirect(`/verifyJobs`)
+      
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  } else {
+    res.redirect('/');
+  }
+});
+//show accepted jobs to admin
+app.get('/showAcceptedJobs',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query('select * from job_post where current_status = $1',["Accepted"])
+    res.render('jobs/showAcceptedJobs',{job:result.rows,name:req.user.name})
+  }else{
+    res.redirect('/')
+  }
+})
+app.get('/showRejectedJobs',async (req,res)=>{
+  if(req.isAuthenticated()){
+    const result = await db.query('select * from job_post where current_status = $1',["Rejected"])
+    res.render('jobs/showAcceptedJobs',{job:result.rows,name:req.user.name})
+  }else{
+    res.redirect('/')
+  }
+})
 //student post routes
 app.post('/apply', res.single('resume'), async (req, res) => {
   if(req.isAuthenticated()){
@@ -296,7 +384,7 @@ app.post('/apply', res.single('resume'), async (req, res) => {
   }
 });
 app.get('/alumni_login',(req,res)=>{
-  res.render('login/alumini_login')
+  res.render('login/alumini_login',{message:""})
 })
 app.get("/logout", (req, res) => {
   req.logout(function (err) {
@@ -373,8 +461,8 @@ app.post('/addSuccessStory', upload.single("storyImage"), async (req, res) => {
 app.post('/addJob',async (req,res)=>{
   if(req.isAuthenticated()){
     const {jobTitle,companyName,location,Vacancy,jobDescription,jobType} = req.body;
-    const result = await db.query('insert into job_post(title,company_name,location,vacancy,description,job_type,email) values($1,$2,$3,$4,$5,$6,$7)',
-      [jobTitle,companyName,location,Vacancy,jobDescription,jobType,req.user.email]
+    const result = await db.query('insert into job_post(title,company_name,location,vacancy,description,job_type,email,posted_by) values($1,$2,$3,$4,$5,$6,$7,$8)',
+      [jobTitle,companyName,location,Vacancy,jobDescription,jobType,req.user.email,req.user.name]
     )
     res.redirect('/showMyJobs')
   }else{
@@ -408,13 +496,26 @@ app.post(
     failureRedirect: "/admin_login",
   })
 );
-app.post(
-  "/alu_login",
-  passport.authenticate("alumni", {
-    successRedirect: "/alumniDashboard",
-    failureRedirect: "/alumni_login",
-  })
-);
+app.post('/alu_login', (req, res, next) => {
+  passport.authenticate('alumni', (err, user, info) => {
+    if (err) {
+      return next(err); // If there's an error, pass it to the next middleware
+    }
+    if (!user) {
+      // If authentication fails, redirect to the login page with a message
+      return res.render('login/alumini_login',{message:info.message})
+    }
+    // If authentication succeeds, log the user in
+    req.logIn(user, (err) => {
+      if (err) {
+        return next(err);
+      }
+      // Redirect to the alumni dashboard on successful login
+      return res.redirect('/alumniDashboard');
+    });
+  })(req, res, next);
+});
+
 app.post(
   "/student_login",
   passport.authenticate("student", {
@@ -453,6 +554,13 @@ passport.use(
         "SELECT * FROM alumni WHERE email = $1 ",
         [username]
       );
+      if(result.rows[0].status=='Not evaluated'){
+        return cb(null, false, { message: "You are not approved by Admin. Kindly contact admin@college.edu" });
+      }else if(result.rows[0].status=="Rejected"){
+        return cb(null, false, { message: "Your request was rejected by Admin. Kindly contact admin@college.edu" });
+
+      }
+      else{
       if (result.rows.length > 0) {
         const user = result.rows[0];
         const storedHashedPassword = user.password;
@@ -461,6 +569,7 @@ passport.use(
       } else {
         return cb("User not found");
       }
+    }
     } catch (err) {
       console.log(err);
     }

@@ -95,26 +95,30 @@
 </head>
 
 <body class="sb-nav-fixed">
-    <%- include('../partials/Alumniheader.ejs') %>
+    <%- include('../partials/adminheader.ejs') %>
         <div id="layoutSidenav_content">
             <main>
                 <div class="container-fluid px-4">
                     <div class="container">
-                        <h2>Student Job Applications</h2>
+                        <h2>Responces</h2>
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Posted By</th>
                                     <th>Job Title</th>
-                                    <th>Company</th>
+                                    <th>Company Name</th>
                                     <th>Location</th>
-                                    <th>Job Type</th>
                                     <th>Vacancy</th>
-                                    <th>Response</th>
+                                    <th>Job Type</th>
+                                    <th>Acept/Reject</th>
                                 </tr>
                             </thead>
                             <tbody id="applicationsTable">
                                 <% job.forEach(element=> { %>
                                     <tr>
+                                        <td>
+                                            <%= element.posted_by %>
+                                        </td>
                                         <td>
                                             <%= element.title %>
                                         </td>
@@ -125,21 +129,14 @@
                                             <%= element.location %>
                                         </td>
                                         <td>
+                                            <%= element.vacancy %>
+                                        </td>
+                                        <td>
                                             <%= element.job_type %>
                                         </td>
                                         <td>
-                                            <%= element.vacancy %>
+                                            <%= element.current_status %>
                                         </td>
-                                        <% if (element.current_status=='Accepted' ) { %>
-                                            <td><button class="btn-response"><a
-                                                        style="text-decoration: none; color: white;"
-                                                        href="/responces/:<%= element.id %>">View
-                                                        Responces</a></button></td>
-                                            <% } else { %>
-                                                <td>
-                                                    <%= element.current_status %>
-                                                </td>
-                                                <% } %>
 
                                     </tr>
                                     <% }) %>
