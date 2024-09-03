@@ -20,6 +20,7 @@ app.use(
     },
   })
 );
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "public/img");
@@ -87,6 +88,9 @@ app.get('/adminDashboard', async (req, res) => {
     const job_count = await db.query("select count(*) from job_post where current_status='Not evaluated by admin'")
     const acepted_job_count = await db.query("select count(*) from job_post where current_status = $1", ["Accepted"])
     const rejected_job_count = await db.query("select count(*) from job_post where current_status = $1", ["Rejected"])
+    // const alumini_count = await db.query("select count(*) from alumni where current_status=$1", ["Not evaluated by admin"])
+    // console.log(alumini_count.rows);
+
     res.render('admin/index', { name: req.user.name, eve_count: eve_count, job_count: job_count.rows[0].count, approved_job_count: acepted_job_count.rows[0].count, rejected_job_count: rejected_job_count.rows[0].count })
   } else {
     res.redirect('/')
@@ -94,11 +98,12 @@ app.get('/adminDashboard', async (req, res) => {
 })
 app.get('/register', (req, res) => {
   res.render('login/register')
+
 })
 app.get('/showAllAlumni', async (req, res) => {
   if (req.isAuthenticated()) {
     const result = await db.query("Select * from alumni where status=$1", ["Not evaluated"])
-    res.render('verifyAlumni/showAllAlumni', { alumni: result.rows, name: req.user.name })
+    res.render('verifyAlumni/showAllAlumni', { alumni: result.rows, name: req.user.name, message: "" })
   } else {
     res.redirect('/')
   }
@@ -226,9 +231,13 @@ app.get('/studentRegister', (req, res) => {
 })
 app.post('/studentRegister', upload.single('pic'), async (req, res) => {
   const { fullname, collegeid, gender, batch, password, email } = req.body;
-  const pic = req.file.filename;
-  await db.query('insert into student(name,roll_no,password,profile_pic,gender,batch,email) values($1,$2,$3,$4,$5,$6,$7)', [fullname, collegeid, password, pic, gender, batch, email])
-  res.redirect('/student_login')
+  try {
+    const pic = req.file.filename;
+    await db.query('insert into student(name,roll_no,password,profile_pic,gender,batch,email) values($1,$2,$3,$4,$5,$6,$7)', [fullname, collegeid, password, pic, gender, batch, email])
+    res.redirect('/student_login')
+  } catch (err) {
+    res.send(err)
+  }
 })
 app.get('/EventStudent', async (req, res) => {
   if (req.isAuthenticated()) {
@@ -493,21 +502,23 @@ app.post('/register', upload.single('pic'), async (req, res) => {
   try {
     const { fullname, collegeid, gender, batch, companyname, email, password, about } = req.body;
     const pic = req.file ? req.file.filename : null;
-    const result = await db.query('select * from alumni where email = $1', [email])
-    if (result.rows.length == 0) {
-      const result = await db.query("insert into alumni(email,name,password,profile_pic,passout,current_job,about,gender) values($1,$2,$3,$4,$5,$6,$7,$8)",
-        [email, fullname, password, pic, batch, companyname, about, gender]
-      )
-    } else {
-      res.redirect('/alumni_login')
+
+    const result = await db.query('SELECT * FROM alumni WHERE email = $1', [email]);
+
+    if (result.rows.length === 0) {
+      await db.query("INSERT INTO alumni (email, name, password, profile_pic, passout, current_job, about, gender,collegeid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9)",
+        [email, fullname, password, pic, batch, companyname, about, gender, collegeid]
+      );
     }
 
-    res.redirect('/alumni_login');
+    res.redirect('/alumni_login'); // Only one redirect call here
+
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
   }
 });
+
 
 app.post(
   "/login",

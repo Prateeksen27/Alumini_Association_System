@@ -74,13 +74,9 @@
             border-radius: 3px;
             box-sizing: border-box;
             resize: vertical;
-            /* Allows resizing only vertically */
             min-height: 100px;
-            /* Set a minimum height */
             font-family: Arial, Helvetica, sans-serif;
-            /* Consistent font */
             font-size: 14px;
-            /* Set a consistent font size */
         }
 
         .signin {
@@ -92,6 +88,21 @@
             color: #007bff;
             text-decoration: none;
         }
+
+        /* Styling for the Batch and Gender fields */
+
+
+        #batch,
+        #gender {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: border-color 0.3s ease-in-out;
+        }
     </style>
 </head>
 
@@ -99,7 +110,7 @@
 
     <div class="container">
         <h2>REGISTRATION PAGE</h2>
-        <form action="/studentRegister" method="post" enctype="multipart/form-data">
+        <form id="registrationForm" action="/studentRegister" method="post" enctype="multipart/form-data">
             <label for="fullname">Fullname:</label>
             <input type="text" id="fullname" name="fullname" placeholder="Enter your fullname" autofocus required>
 
@@ -110,15 +121,17 @@
             <select id="gender" name="gender" required>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
+                <option value="other">Other</option>
             </select>
 
             <label for="batch">Batch:</label>
-            <input type="text" id="batch" name="batch" placeholder="Enter your Batch" required>
+            <input type="number" id="batch" name="batch" placeholder="Enter your Batch and must be less then 2020"
+                required>
 
             <label for="pic">Pic:</label>
             <input type="file" id="pic" name="pic">
-            <label for="email">Password:</label>
-            <input type="email" id="password" name="email" placeholder="Enter your email id" required>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email id" required>
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" placeholder="Enter your password" required>
 
@@ -130,6 +143,63 @@
         </div>
     </div>
 
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function (e) {
+            // Validate Fullname
+            const fullname = document.getElementById('fullname').value;
+            if (!/^[a-zA-Z\s]+$/.test(fullname)) {
+                alert('Fullname should contain only letters and spaces.');
+                e.preventDefault();
+                return;
+            }
+
+            // Validate College ID
+            const collegeid = document.getElementById('collegeid').value;
+            if (!/^\d{2}[a-zA-Z]{2,}\d{3}$/.test(collegeid) || /^\d{2}[a-zA-Z]{2,}\d{4}$/.test(collegeid)) {
+                alert('College ID should follow the format: 22branch000.');
+                e.preventDefault();
+                return;
+            }
+            const pic = document.getElementById('pic').files.length;
+            if (pic === 0) {
+                alert('Please upload a picture.');
+                e.preventDefault();
+                return;
+            }
+
+            // Validate Gender
+            const gender = document.getElementById('gender').value;
+            if (gender === '') {
+                alert('Please select a gender.');
+                e.preventDefault();
+                return;
+            }
+
+            // Validate Batch
+            // const batch = document.getElementById('batch').value;
+            // if (!/^\d{4}$/.test(batch) || batch > 2020) {
+            //     alert('Batch should be a 4-digit number.');
+            //     e.preventDefault();
+            //     return;
+            // }
+
+            // Validate Email
+            const email = document.getElementById('email').value;
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Please enter a valid email address.');
+                e.preventDefault();
+                return;
+            }
+
+            // Validate Password
+            const password = document.getElementById('password').value;
+            if (password.length < 8) {
+                alert('Password should be at least 8 characters long.');
+                e.preventDefault();
+                return;
+            }
+        });
+    </script>
 </body>
 
 </html>
