@@ -48,7 +48,7 @@ const saltRounds = 10;
 const db = new pg.Client({
   user: "postgres",
   host: "localhost",
-  database: "Alimini_Association_System",
+  database: "practise",
   password: "root",
   port: 5432,
 });
