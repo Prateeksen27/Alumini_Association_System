@@ -225,6 +225,119 @@ function sendMailToStudent(email, jobTitle, companyName, location) {
   };
   sendMail(transporter, mailOptions);
 }
+function sendMailToStudentWhenAccepted(job, applicant, alumni) {
+  const mailPage = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f7;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            border-bottom: 4px solid #0056b3;
+        }
+        .content {
+            padding: 20px;
+            color: #333333;
+            line-height: 1.6;
+        }
+        .content p {
+            margin: 0 0 15px;
+        }
+        .details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .details p {
+            margin: 5px 0;
+        }
+        .footer {
+            background-color: #f4f4f7;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #555555;
+            border-top: 1px solid #e0e0e0;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+    <title>Your Details Have Been Verified</title>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            Your Details Have Been Verified by an Alumnus
+        </div>
+        <div class="content">
+            <p>Dear ${applicant.applicant_name},</p>
+            
+            <p>I hope this message finds you well.</p>
+
+            <p>I am pleased to inform you that your details have been successfully verified for job role ${job.title}. This verification process confirms the accuracy of the academic records, achievements, and references you provided.</p>
+            
+            <p>If you need any further assistance or additional information regarding the verification process, please feel free to reach out directly to the alumnus who facilitated this verification. They are available to assist you with any queries or provide further support as needed.</p>
+            
+            <p>Thank you for your patience throughout this process, and congratulations on successfully completing this important step.</p>
+        </div>
+        <div class="footer">
+            <p>Best regards,</p>
+            <p>${alumni.name}</p>
+            <p>${alumni.current_job}</p>
+        </div>
+    </div>
+</body>
+</html>`
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // Use `true` for port 465, `false` for all other ports
+    auth: {
+      user: "suprateeksen62@gmail.com",
+      pass: "jqdf kghy atby pvoq",
+    },
+  });
+  const mailOptions = {
+    from: {
+      name: "Alumni Association System",
+      address: "suprateeksen62@gmail.com",
+    },
+    to: [
+      applicant.applicant_email,
+    ], // list of receivers
+    subject: `Congratulation Your Request is Accepted for Job role ${job.title} in ${alumni.current_job} `, // Subject line
+    text: "", // plain text body
+    html: mailPage,
+  };
+  sendMail(transporter, mailOptions);
+}
 const sendMail = async (transporter, mailOptions) => {
   try {
     await transporter.sendMail(mailOptions);
@@ -233,4 +346,4 @@ const sendMail = async (transporter, mailOptions) => {
   }
 };
 
-export { sendMailToAluminiWhenApproved, sendMailToStudent }
+export { sendMailToAluminiWhenApproved, sendMailToStudent, sendMailToStudentWhenAccepted }

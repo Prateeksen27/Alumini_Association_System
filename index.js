@@ -7,7 +7,7 @@ import session from "express-session";
 import path from "path";
 import multer from 'multer'
 import moment from "moment";
-import { sendMailToAluminiWhenApproved, sendMailToStudent } from "./sendMail.js";
+import { sendMailToAluminiWhenApproved, sendMailToStudent, sendMailToStudentWhenAccepted } from "./sendMail.js";
 import { name } from "ejs";
 const app = express();
 app.use(
@@ -216,7 +216,7 @@ app.get('/verifyJobs', async (req, res) => {
 app.get('/StudentDashboard', async (req, res) => {
   if (req.isAuthenticated) {
     const event = await db.query('select count(*) from event');
-    const jobs = await db.query('select count(*) from job_post')
+    const jobs = await db.query('select count(*) from job_post where current_status =$1', ['Accepted'])
     const eve_count = event.rows[0].count;
     const job_count = jobs.rows[0].count;
     res.render('student/index', { eve_count: eve_count, job_count: job_count, name: req.user.name })
@@ -287,6 +287,10 @@ app.get('/acept/:id/:app_Id', async (req, res) => {
       console.log(id, app_id);
 
       await db.query("UPDATE job_applications SET status = $1 WHERE application_id = $2", ["Accepted", id]);
+      const job_detail = await db.query("select * from job_post where id=$1", [app_id])
+      const applicant = await db.query("select * from job_applications where application_id=$1", [id])
+      const alumni = await db.query("select * from alumni where email=$1", [job_detail.rows[0].email])
+      sendMailToStudentWhenAccepted(job_detail.rows[0], applicant.rows[0], alumni.rows[0])
       res.redirect(`/responces/:${app_id}`)
 
     } catch (error) {
