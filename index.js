@@ -88,10 +88,11 @@ app.get('/adminDashboard', async (req, res) => {
     const job_count = await db.query("select count(*) from job_post where current_status='Not evaluated by admin'")
     const acepted_job_count = await db.query("select count(*) from job_post where current_status = $1", ["Accepted"])
     const rejected_job_count = await db.query("select count(*) from job_post where current_status = $1", ["Rejected"])
-    // const alumini_count = await db.query("select count(*) from alumni where current_status=$1", ["Not evaluated by admin"])
-    // console.log(alumini_count.rows);
+    const alumni_count = await db.query("select count(*) from alumni where status=$1", ["Not evaluated"])
 
-    res.render('admin/index', { name: req.user.name, eve_count: eve_count, job_count: job_count.rows[0].count, approved_job_count: acepted_job_count.rows[0].count, rejected_job_count: rejected_job_count.rows[0].count })
+
+
+    res.render('admin/index', { name: req.user.name, eve_count: eve_count, job_count: job_count.rows[0].count, approved_job_count: acepted_job_count.rows[0].count, rejected_job_count: rejected_job_count.rows[0].count, alumni_count: alumni_count.rows[0].count })
   } else {
     res.redirect('/')
   }
@@ -236,7 +237,7 @@ app.post('/studentRegister', upload.single('pic'), async (req, res) => {
     await db.query('insert into student(name,roll_no,password,profile_pic,gender,batch,email) values($1,$2,$3,$4,$5,$6,$7)', [fullname, collegeid, password, pic, gender, batch, email])
     res.redirect('/student_login')
   } catch (err) {
-    res.send(err)
+    res.send(err.detail)
   }
 })
 app.get('/EventStudent', async (req, res) => {
@@ -489,9 +490,9 @@ app.post('/addSuccessStory', upload.single("storyImage"), async (req, res) => {
 });
 app.post('/addJob', async (req, res) => {
   if (req.isAuthenticated()) {
-    const { jobTitle, companyName, location, Vacancy, jobDescription, jobType } = req.body;
+    const { jobTitle, companyName, location, vacancy, jobDescription, jobType } = req.body;
     const result = await db.query('insert into job_post(title,company_name,location,vacancy,description,job_type,email,posted_by) values($1,$2,$3,$4,$5,$6,$7,$8)',
-      [jobTitle, companyName, location, Vacancy, jobDescription, jobType, req.user.email, req.user.name]
+      [jobTitle, companyName, location, vacancy, jobDescription, jobType, req.user.email, req.user.name]
     )
     res.redirect('/showMyJobs')
   } else {

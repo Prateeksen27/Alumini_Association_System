@@ -117,36 +117,33 @@
                             <!-- Full Name -->
                             <div class="form-group">
                                 <label for="fullName">Full Name</label>
-                                <input type="text" id="fullName" name="fullName" class="form-control"
-                                    value="<%= user.name %>" disabled>
+                                <input type="text" id="fullName" name="fullName" class="form-control" value="" disabled>
                             </div>
 
                             <!-- Company Name -->
                             <div class="form-group">
                                 <label for="companyName">Company Name</label>
-                                <input type="text" id="companyName" name="companyName" class="form-control"
-                                    value="<%= job.company_name %>" disabled>
+                                <input type="text" id="companyName" name="companyName" class="form-control" value=""
+                                    disabled>
                             </div>
 
                             <!-- Designation -->
                             <div class="form-group">
                                 <label for="designation">Designation</label>
-                                <input type="text" id="designation" name="designation" class="form-control"
-                                    value="<%= job.title %>" disabled>
+                                <input type="text" id="designation" name="designation" class="form-control" value=""
+                                    disabled>
                             </div>
 
                             <!-- Location -->
                             <div class="form-group">
                                 <label for="location">Location</label>
-                                <input type="text" id="location" name="location" class="form-control"
-                                    value="<%= job.location %>" disabled>
+                                <input type="text" id="location" name="location" class="form-control" value="" disabled>
                             </div>
 
                             <!-- Job Type -->
                             <div class="form-group">
                                 <label for="jobType">Job Type</label>
-                                <input type="text" id="jobType" name="jobType" class="form-control"
-                                    value="<%= job.job_type %>" disabled>
+                                <input type="text" id="jobType" name="jobType" class="form-control" value="" disabled>
                             </div>
                             <!-- LinkedIn Profile -->
                             <div class="form-group">
@@ -214,6 +211,83 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
             crossorigin="anonymous"></script>
         <script src="/js/scripts.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const form = document.querySelector(".job-posting-form");
+                const linkedinInput = document.getElementById("linkedin");
+                const githubInput = document.getElementById("github");
+                const emailInput = document.getElementById("github");
+                const availabilitySelect = document.getElementById("availability");
+                const jobDescriptionTextarea = document.getElementById("jobDescription");
+                const resumeInput = document.querySelector("input[name='resume']");
+
+                form.addEventListener("submit", function (event) {
+                    let isValid = true;
+                    let errorMessage = "";
+
+                    // Validate LinkedIn URL
+                    if (!validateURL(linkedinInput.value)) {
+                        isValid = false;
+                        errorMessage += "Please enter a valid LinkedIn profile URL.\n";
+                    }
+
+                    // Validate GitHub URL
+                    if (!validateURL(githubInput.value)) {
+                        isValid = false;
+                        errorMessage += "Please enter a valid GitHub profile URL.\n";
+                    }
+
+                    // Validate Email
+                    if (!validateEmail(emailInput.value)) {
+                        isValid = false;
+                        errorMessage += "Please enter a valid Email ID.\n";
+                    }
+
+                    // Validate Availability
+                    if (availabilitySelect.value === "") {
+                        isValid = false;
+                        errorMessage += "Please select your availability for the interview.\n";
+                    }
+
+                    // Validate Job Description (Why You Want This Job)
+                    if (jobDescriptionTextarea.value.trim() === "") {
+                        isValid = false;
+                        errorMessage += "Please provide a reason for why you want this job.\n";
+                    }
+
+                    // Validate Resume Upload (optional, but check if PDF)
+                    if (resumeInput.files.length > 0) {
+                        const allowedFileTypes = ["application/pdf"];
+                        if (!allowedFileTypes.includes(resumeInput.files[0].type)) {
+                            isValid = false;
+                            errorMessage += "Please upload a valid resume in PDF format.\n";
+                        }
+                    }
+
+                    // If the form is invalid, prevent submission and show error messages
+                    if (!isValid) {
+                        event.preventDefault();
+                        alert(errorMessage);
+                    }
+                });
+
+                function validateURL(url) {
+                    const urlPattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+                        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+                        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+                        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+                        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+                        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+                    return !!urlPattern.test(url);
+                }
+
+                function validateEmail(email) {
+                    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    return emailPattern.test(email);
+                }
+            });
+
+        </script>
 </body>
 
 </html>

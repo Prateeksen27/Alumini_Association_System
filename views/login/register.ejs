@@ -99,8 +99,9 @@
       color: #555;
     }
 
-    #batch,
-    #gender {
+
+    #gender,
+    #batch {
       width: 100%;
       padding: 12px;
       margin-bottom: 20px;
@@ -140,8 +141,14 @@
       </select>
 
       <label for="batch">Batch:</label>
-      <input type="number" id="batch" name="batch" placeholder="Enter your Batch upto 2020" max="2020" min="1999"
-        maxlength="4" required>
+      <select name="batch" id="batch">
+        <option value="null">Select</option>
+        <option value="2016-20">2016-20</option>
+        <option value="2017-21">2017-21</option>
+        <option value="2018-22">2018-22</option>
+        <option value="2019-23">2019-23</option>
+        <option value="2020-24">2020-24</option>
+      </select>
 
       <label for="companyname">Currently Connected To:</label>
       <input type="text" id="companyname" name="companyname" placeholder="Enter your companyname" required>
@@ -191,6 +198,12 @@
         e.preventDefault();
         return;
       }
+      const batch = document.getElementById('batch').value;
+      if (batch === 'null') {
+        alert('Please select a batch.');
+        e.preventDefault();
+        return;
+      }
       const email = document.getElementById('email').value;
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         alert('Please enter a valid email address.');
@@ -211,6 +224,12 @@
       if (about.length > 500) {
         alert('About section should not exceed 500 characters.');
         e.preventDefault();
+      }
+      const pic = document.getElementById('pic').files[0];
+      if (pic && !['image/jpeg', 'image/png', 'image/gif'].includes(pic.type)) {
+        alert('Only JPEG, PNG, and GIF files are allowed.');
+        e.preventDefault();
+        return;
       }
     });
   </script>
