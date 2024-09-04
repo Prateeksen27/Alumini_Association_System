@@ -13,7 +13,7 @@ CREATE TABLE alumni (
     current_job TEXT,
     about TEXT,
     gender TEXT,
-    status TEXT default "Not evaluated",
+    status TEXT default 'Not evaluated',
     collegeid TEXT
 );
 
@@ -38,7 +38,7 @@ CREATE TABLE job_applications (
     resume TEXT,
     applicant_email TEXT,
     answer TEXT,
-    status TEXT default "Not evaluated",
+    status TEXT default 'Not evaluated',
     applicant_name text,
 );
 
@@ -51,7 +51,7 @@ CREATE TABLE job_post (
     description TEXT,
     job_type TEXT,
     email TEXT,
-    current_status TEXT default "Not evaluated by admin",
+    current_status TEXT default 'Not evaluated by admin',
     posted_by TEXT
 );
 
