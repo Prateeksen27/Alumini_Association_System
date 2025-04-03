@@ -91,14 +91,14 @@ function sendMailToAluminiWhenApproved(email, name) {
     port: 587,
     secure: false, // Use `true` for port 465, `false` for all other ports
     auth: {
-      user: "",
-      pass: "",
+      user: "suprateeksen62@gmail.com",
+      pass: "mcsb auop tleg ebth",
     },
   });
   const mailOptions = {
     from: {
       name: "Alumni Association System",
-      address: "",
+      address: "suprateeksen62@gmail.com",
     },
     to: [
       email,
@@ -207,14 +207,14 @@ function sendMailToStudent(email, jobTitle, companyName, location) {
     port: 587,
     secure: false, // Use `true` for port 465, `false` for all other ports
     auth: {
-      user: "",
-      pass: "",
+      user: "suprateeksen62@gmail.com",
+      pass: "mcsb auop tleg ebth",
     },
   });
   const mailOptions = {
     from: {
       name: "Alumni Association System",
-      address: "",
+      address: "suprateeksengcsj@gmail.com",
     },
     to: [
       email,
@@ -320,14 +320,14 @@ function sendMailToStudentWhenAccepted(job, applicant, alumni) {
     port: 587,
     secure: false, // Use `true` for port 465, `false` for all other ports
     auth: {
-      user: "",
-      pass: "",
+      user: "suprateeksen62@gmail.com",
+      pass: "mcsb auop tleg ebth",
     },
   });
   const mailOptions = {
     from: {
       name: "Alumni Association System",
-      address: "",
+      address: "suprateeksen62@gmail.com",
     },
     to: [
       applicant.applicant_email,

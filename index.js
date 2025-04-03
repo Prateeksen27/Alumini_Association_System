@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
 import passport from "passport";
@@ -9,6 +9,9 @@ import multer from 'multer'
 import moment from "moment";
 import { sendMailToAluminiWhenApproved, sendMailToStudent, sendMailToStudentWhenAccepted } from "./sendMail.js";
 import { name } from "ejs";
+import { log } from "console";
+import { genPrompt } from "./generatePrompt.js";
+import run from "./gemini.js";
 const app = express();
 app.use(
   session({
@@ -59,6 +62,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(express.json())
 app.get("/", (req, res) => {
   res.render("landing/home");
 });
@@ -111,10 +115,12 @@ app.get('/showAllAlumni', async (req, res) => {
 })
 app.get('/approveAlumni/:email', async (req, res) => {
   if (req.isAuthenticated()) {
-    await db.query('update alumni set status = $1 where email=$2', ["Approved", req.params.email.substring(1)])
-    const name = await db.query('select name from alumni where email=$1', [req.params.email.substring(1)])
-    sendMailToAluminiWhenApproved(req.params.email.substring(1), name.rows[0].name)
-    res.redirect('/showAllAlumni')
+    console.log(req.params.email);
+    
+    await db.query('update alumni set status = $1 where email=$2', ["Approved", req.params.email])
+    const name = await db.query('select name from alumni where email=$1', [req.params.email])
+    sendMailToAluminiWhenApproved(req.params.email, name.rows[0].name)
+    res.json({ success: true })
   } else {
     res.redirect('/')
   }
@@ -122,7 +128,7 @@ app.get('/approveAlumni/:email', async (req, res) => {
 app.get('/rejectAlumni/:email', async (req, res) => {
   if (req.isAuthenticated()) {
     await db.query('update alumni set status = $1 where email=$2', ["Rejected", req.params.email.substring(1)])
-    res.redirect('/showAllAlumni')
+    res.json({ success: true })
 
   } else {
     res.redirect('/')
@@ -280,6 +286,8 @@ app.get('/apply/:id', async (req, res) => {
 //acept/reject routes
 app.get('/acept/:id/:app_Id', async (req, res) => {
   if (req.isAuthenticated()) {
+    console.log("Hello");
+    
     const id = req.params.id;
     const app_id = req.params.app_Id;
 
@@ -291,11 +299,11 @@ app.get('/acept/:id/:app_Id', async (req, res) => {
       const applicant = await db.query("select * from job_applications where application_id=$1", [id])
       const alumni = await db.query("select * from alumni where email=$1", [job_detail.rows[0].email])
       sendMailToStudentWhenAccepted(job_detail.rows[0], applicant.rows[0], alumni.rows[0])
-      res.redirect(`/responces/:${app_id}`)
+     res.json({ success: true });
 
     } catch (error) {
       console.error("Error updating application status:", error);
-      res.status(500).send("Internal Server Error");
+     res.json({ success: false });
     }
   } else {
     res.redirect('/');
@@ -310,11 +318,11 @@ app.get('/reject/:id/:app_Id', async (req, res) => {
       console.log(id, app_id);
 
       await db.query("UPDATE job_applications SET status = $1 WHERE application_id = $2", ["Rejected", id]);
-      res.redirect(`/responces/:${app_id}`)
+      res.json({ success: true });
 
     } catch (error) {
       console.error("Error updating application status:", error);
-      res.status(500).send("Internal Server Error");
+      res.json({ success: false });
     }
   } else {
     res.redirect('/');
@@ -391,27 +399,29 @@ app.get('/showRejectedJobs', async (req, res) => {
 app.post('/apply', res.single('resume'), async (req, res) => {
   if (req.isAuthenticated()) {
     try {
+
       const jobId = req.query.id;
       const hostEmail = req.query.email;
-      // Access other form fields from req.body
-      const linkedInProfile = req.body.linkedin;
-      const gitHubProfile = req.body.github;
       const availability = req.body.availability;
       const answer = req.body.answer;
-      const email = req.body.email;
       const resumeFile = req.file.filename;
+      //check if already applied
+      const result = await db.query("SELECT * FROM job_applications WHERE job_id = $1 AND applicant_email = $2", [jobId, req.user.email]);
+      if (result.rows.length > 0) {
+        return res.json({ success: false, message: "You have already applied for this job." ,applied:true});
+      }
       const insertApplicationQuery = `
-            INSERT INTO job_applications (job_id, hostEmail, linkedin_profile, github_profile, availability, answer, resume,applicant_name,applicant_email)
-            VALUES ($1, $2, $3, $4, $5, $6, $7,$8,$9)
+            INSERT INTO job_applications (job_id, hostEmail, availability, answer, resume,applicant_name,applicant_email)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
         `;
-      const values = [jobId, hostEmail, linkedInProfile, gitHubProfile, availability, answer, resumeFile, req.user.name, email];
+      const values = [jobId, hostEmail,availability, answer, resumeFile, req.user.name, req.user.email];
 
       await db.query(insertApplicationQuery, values);
 
-      res.redirect('/showJobs')
+      res.json({ success: true });
     } catch (error) {
       console.error('Error processing application:', error);
-      res.status(500).send('An error occurred while processing your application.');
+     res.json({ success: false });
     }
   } else {
     res.redirect('/')
@@ -502,6 +512,14 @@ app.post('/addJob', async (req, res) => {
   } else {
     res.redirect('/')
   }
+})
+//Gemini Responce
+app.post('/generate', async (req, res) => {
+  const {title,type,company}=req.body
+  const prompt =  genPrompt(title,type,company,req.user.name)
+  const resp = await run(prompt)  
+  res.json({response:resp})
+  
 })
 app.post('/register', upload.single('pic'), async (req, res) => {
   try {
@@ -596,6 +614,7 @@ passport.use(
         "SELECT * FROM alumni WHERE email = $1 ",
         [username]
       );
+      if(result.rows.length == 0) return cb(null, false, { message: "User not found" });
       if (result.rows[0].status == 'Not evaluated') {
         return cb(null, false, { message: "You are not approved by Admin. Kindly contact admin@college.edu" });
       } else if (result.rows[0].status == "Rejected") {
